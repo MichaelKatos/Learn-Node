@@ -3,5 +3,5 @@ node_modules/
 *.log
 .idea
 haters/
-variables.env
+variables.env.sample
 variables.env.now
