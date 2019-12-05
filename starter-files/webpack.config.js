@@ -4,8 +4,10 @@
 
 const path = require('path');
 const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const autoprefixer = require('autoprefixer');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const devMode = process.env.NODE_ENV !== 'production';
 /*
   webpack sees every file as a module.
   How to handle those files is up to loaders.
@@ -42,18 +44,20 @@ const styles = {
   // here we pass the options as query params b/c it's short.
   // remember above we used an object for each loader instead of just a string?
   // We don't just pass an array of loaders, we run them through the extract plugin so they can be outputted to their own .css file
-  use: ExtractTextPlugin.extract([
+  use: [
+    {
+      loader: MiniCssExtractPlugin.loader,
+      options: {
+        hmr: process.env.NODE_ENV === 'development'
+      }
+    },
     'css-loader?sourceMap',
     postcss,
     'sass-loader?sourceMap'
-  ])
+  ]
 };
 
 // We can also use plugins - this one will compress the crap out of our JS
-const uglify = new webpack.config.optimization.minimize({
-  // eslint-disable-line
-  compress: { warnings: false }
-});
 
 // OK - now it's time to put it all together
 const config = {
@@ -77,11 +81,23 @@ const config = {
   module: {
     rules: [javascript, styles]
   },
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({
+        extractComments: true
+      })
+    ]
+  },
   // finally we pass it an array of our plugins - uncomment if you want to uglify
   // plugins: [uglify]
   plugins: [
     // here is where we tell it to output our css to a separate file
-    new ExtractTextPlugin('style.css')
+    new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: devMode ? '[name].css' : '[name].[hash].css',
+      chunkFilename: devMode ? '[id].css' : '[id].[hash].css'
+    })
   ]
 };
 // webpack is cranky about some packages using a soon to be deprecated API. shhhhhhh
