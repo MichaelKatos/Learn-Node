@@ -15,6 +15,7 @@ require('dotenv').config({
 });
 
 // Connect to our Database and handle any bad connections
+mongoose.set('useFindAndModify', false);
 mongoose.connect(process.env.DATABASE, {
   useUnifiedTopology: true,
   useNewUrlParser: true,
