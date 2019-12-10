@@ -22,23 +22,25 @@ const javascript = {
       presets: ['@babel/preset-env']
     }
   }
-}
+};
 
 const styles = {
-    test: /\.scss$/,
-    use: [
-        // fallback to style-loader in development
-        process.env.NODE_ENV !== 'production' ? 'style-loader' : MiniCssExtractPlugin.loader,
-        "css-loader",
-        "sass-loader"
-    ]
+  test: /\.scss$/,
+  use: [
+    // fallback to style-loader in development
+    process.env.NODE_ENV !== 'production'
+      ? 'style-loader'
+      : MiniCssExtractPlugin.loader,
+    'css-loader',
+    'sass-loader'
+  ]
 };
 
 // OK - now it's time to put it all together
 const config = {
   entry: {
     // we only have 1 entry, but I've set it up for multiple in the future
-    App: './public/javascripts/app.js'
+    App: './public/javascripts/delicious-app.js'
   },
   // we're using sourcemaps and here is where we specify which kind of sourcemap to use
   devtool: 'source-map',
@@ -63,8 +65,8 @@ const config = {
       // Options similar to the same options in webpackOptions.output
       // both options are optional
       filename: devMode ? '[name].css' : '[name].[hash].css',
-      chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
-    }),
+      chunkFilename: devMode ? '[id].css' : '[id].[hash].css'
+    })
   ]
 };
 // webpack is cranky about some packages using a soon to be deprecated API. shhhhhhh
