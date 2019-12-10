@@ -5,4 +5,4 @@ node_modules/
 haters/
 variables.env.sample
 variables.env.now
-.vscode/settings.json
+.vscode/
