@@ -16,6 +16,7 @@ require('dotenv').config({
 
 // Connect to our Database and handle any bad connections
 mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 mongoose.connect(process.env.DATABASE, {
   useUnifiedTopology: true,
   useNewUrlParser: true,
@@ -30,6 +31,7 @@ mongoose.connection.on('error', err => {
 
 //import all Models
 require('./models/Store');
+require('./models/User');
 
 // Start our app!
 const app = require('./app');
