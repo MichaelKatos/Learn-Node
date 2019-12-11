@@ -3,6 +3,7 @@ node_modules/
 *.log
 .idea
 haters/
-variables.env
+./starter-files/variables.env
 variables.env.now
 .vscode/
+starter-files/variables.env
