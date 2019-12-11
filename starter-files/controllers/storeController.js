@@ -11,7 +11,9 @@ const multerOptions = {
     if (isPhoto) {
       next(null, true);
     } else {
-      next({ message: "That filetype isnt't allowed" }, false);
+      next({
+        message: "That filetype isnt't allowed"
+      }, false);
     }
   }
 };
@@ -79,19 +81,48 @@ exports.updateStore = async (req, res) => {
   //set location data to be a point
   req.body.location.type = 'Point';
   // find and update store
-  const store = await Store.findOneAndUpdate(
-    {
+  const store = await Store.findOneAndUpdate({
       _id: req.params.id
     },
-    req.body,
-    {
+    req.body, {
       new: true,
       runValidators: true
     }
   ).exec();
   req.flash(
     'success',
-    `Successfully updated <strong>${store.name}</strong>. <a href="/stores/${store.slug}">View Store</a>`
+    `Successfully updated <strong>${store.name}</strong>. <a href="/store/${store.slug}">View Store</a>`
   );
   res.redirect(`/stores/${store._id}/edit`);
+};
+
+exports.getStoreBySlug = async (req, res, next) => {
+  const store = await Store.findOne({
+    slug: req.params.slug
+  });
+  if (!store) {
+    return next();
+  }
+  res.render('store', {
+    store,
+    title: store.name
+  });
+};
+
+exports.getStoresByTag = async (req, res) => {
+  const tag = req.params.tag;
+  const tagQuery = tag || {
+    $exists: true
+  };
+  const tagsPromise = Store.getTagsList();
+  const storesPromise = Store.find({
+    tags: tagQuery
+  });
+  const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
+  res.render('tag', {
+    tags,
+    title: 'Tags',
+    tag,
+    stores
+  });
 };
