@@ -25,19 +25,26 @@ const storeSchema = new mongoose.Schema({
       type: String,
       default: 'Point'
     },
-    coordinates: [{
-      type: Number,
-      required: 'You must supply coordinates'
-    }],
+    coordinates: [
+      {
+        type: Number,
+        required: 'You must supply coordinates'
+      }
+    ],
     address: {
       type: String,
       required: 'You must supply an address!'
     }
   },
-  photo: String
+  photo: String,
+  author: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: 'You must supply an author'
+  }
 });
 
-storeSchema.pre('save', async function (next) {
+storeSchema.pre('save', async function(next) {
   if (!this.isModified('name')) {
     next(); //skip it!
     return; //Stop this function from running
@@ -49,16 +56,16 @@ storeSchema.pre('save', async function (next) {
     slug: slugRegEx
   });
   if (storesWithSlug.length) {
-    this.slug = `${this.slug}-${storesWithSlug.length+1}`;
+    this.slug = `${this.slug}-${storesWithSlug.length + 1}`;
   }
-
 
   next();
   // TODO make more resiliant so slugs are unique
 });
 
-storeSchema.statics.getTagsList = function () {
-  return this.aggregate([{
+storeSchema.statics.getTagsList = function() {
+  return this.aggregate([
+    {
       $unwind: '$tags'
     },
     {
@@ -75,6 +82,6 @@ storeSchema.statics.getTagsList = function () {
       }
     }
   ]);
-}
+};
 
 module.exports = mongoose.model('Store', storeSchema);

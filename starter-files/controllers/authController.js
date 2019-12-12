@@ -2,6 +2,7 @@ const passport = require('passport');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
+const mail = require('../handlers/mail');
 
 exports.login = passport.authenticate('local', {
   failureRedirect: '/login',
@@ -14,7 +15,7 @@ exports.logout = (req, res) => {
   req.logout();
   req.flash('success', 'You are now logged out!');
   res.redirect('/');
-}
+};
 
 exports.isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -31,7 +32,10 @@ exports.forgot = async (req, res) => {
     email: req.body.email
   });
   if (!user) {
-    req.flash('error', `There is no account with the email address <strong>${req.body.email}</strong>`);
+    req.flash(
+      'error',
+      `There is no account with the email address <strong>${req.body.email}</strong>`
+    );
     return res.redirect('/login');
   }
   // 2. Set reset tokens and expiry on their account
@@ -39,11 +43,17 @@ exports.forgot = async (req, res) => {
   user.resetPasswordExpires = Date.now() + 3600000; // 1 hour from now
   await user.save();
   // 3. Send them an email with the token
-  user.resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
-  req.flash('success', `You have been emailed a password reset link ${user.resetURL}`);
+  const resetURL = `http://${req.headers.host}/account/reset/${user.resetPasswordToken}`;
+  await mail.send({
+    user,
+    subject: 'Password Reset',
+    resetURL,
+    filename: 'password-reset'
+  });
+  req.flash('success', `You have been emailed a password reset link.`);
   // 4. Redirect to login page
   res.redirect('/login');
-}
+};
 
 exports.reset = async (req, res) => {
   const user = await User.findOne({
@@ -79,7 +89,10 @@ exports.updatePassword = async (req, res) => {
     }
   });
   if (!user) {
-    req.flash('error', `There is no account with the email address <strong>${req.body.email}</strong>`);
+    req.flash(
+      'error',
+      `There is no account with the email address <strong>${req.body.email}</strong>`
+    );
     return res.redirect('/login');
   }
   //update user password
@@ -91,6 +104,6 @@ exports.updatePassword = async (req, res) => {
 
   //login user
   await req.login(updatedUser);
-  req.flash('success', 'Your password has been updated and you are logged in.');
+  req.flash('success', 'Your password has been updated and you are logged in!');
   res.redirect('/');
 };

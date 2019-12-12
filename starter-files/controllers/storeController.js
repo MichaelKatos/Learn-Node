@@ -11,9 +11,12 @@ const multerOptions = {
     if (isPhoto) {
       next(null, true);
     } else {
-      next({
-        message: "That filetype isnt't allowed"
-      }, false);
+      next(
+        {
+          message: "That filetype isnt't allowed"
+        },
+        false
+      );
     }
   }
 };
@@ -46,6 +49,7 @@ exports.resize = async (req, res, next) => {
 };
 
 exports.createStore = async (req, res) => {
+  req.body.author = req.user._id;
   const store = await new Store(req.body).save();
   req.flash(
     'success',
@@ -81,10 +85,12 @@ exports.updateStore = async (req, res) => {
   //set location data to be a point
   req.body.location.type = 'Point';
   // find and update store
-  const store = await Store.findOneAndUpdate({
+  const store = await Store.findOneAndUpdate(
+    {
       _id: req.params.id
     },
-    req.body, {
+    req.body,
+    {
       new: true,
       runValidators: true
     }
