@@ -25,12 +25,10 @@ const storeSchema = new mongoose.Schema({
       type: String,
       default: 'Point'
     },
-    coordinates: [
-      {
-        type: Number,
-        required: 'You must supply coordinates'
-      }
-    ],
+    coordinates: [{
+      type: Number,
+      required: 'You must supply coordinates'
+    }],
     address: {
       type: String,
       required: 'You must supply an address!'
@@ -44,7 +42,16 @@ const storeSchema = new mongoose.Schema({
   }
 });
 
-storeSchema.pre('save', async function(next) {
+storeSchema.index({
+  name: 'text',
+  description: 'text'
+});
+
+storeSchema.index({
+  location: '2dsphere'
+});
+
+storeSchema.pre('save', async function (next) {
   if (!this.isModified('name')) {
     next(); //skip it!
     return; //Stop this function from running
@@ -63,9 +70,8 @@ storeSchema.pre('save', async function(next) {
   // TODO make more resiliant so slugs are unique
 });
 
-storeSchema.statics.getTagsList = function() {
-  return this.aggregate([
-    {
+storeSchema.statics.getTagsList = function () {
+  return this.aggregate([{
       $unwind: '$tags'
     },
     {

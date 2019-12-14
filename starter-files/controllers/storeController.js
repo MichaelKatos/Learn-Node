@@ -11,8 +11,7 @@ const multerOptions = {
     if (isPhoto) {
       next(null, true);
     } else {
-      next(
-        {
+      next({
           message: "That filetype isnt't allowed"
         },
         false
@@ -67,13 +66,21 @@ exports.getStores = async (req, res) => {
   });
 };
 
+const confirmOwner = (store, user) => {
+  if (!store.author.equals(user._id)) {
+    throw Error('You must own a store in order to edit it');
+  }
+}
+
 exports.editStore = async (req, res) => {
   //1. Find Store with the given Id
   const store = await Store.findOne({
     _id: req.params.id
   });
   //2. Confirm they are the owner of the store
-
+  if (req.user.level < 20) {
+    confirmOwner(store, req.user);
+  }
   //3. Render out the edit form
   res.render('editStore', {
     title: `Edit info for ${store.name}`,
@@ -85,12 +92,10 @@ exports.updateStore = async (req, res) => {
   //set location data to be a point
   req.body.location.type = 'Point';
   // find and update store
-  const store = await Store.findOneAndUpdate(
-    {
+  const store = await Store.findOneAndUpdate({
       _id: req.params.id
     },
-    req.body,
-    {
+    req.body, {
       new: true,
       runValidators: true
     }
@@ -105,7 +110,7 @@ exports.updateStore = async (req, res) => {
 exports.getStoreBySlug = async (req, res, next) => {
   const store = await Store.findOne({
     slug: req.params.slug
-  });
+  }).populate('author');
   if (!store) {
     return next();
   }
@@ -132,3 +137,52 @@ exports.getStoresByTag = async (req, res) => {
     stores
   });
 };
+
+exports.searchStores = async (req, res) => {
+  const stores = await Store
+    //1. Find stores that match
+    .find({
+      $text: {
+        $search: req.query.q
+      }
+    }, {
+      score: {
+        $meta: 'textScore'
+      }
+    })
+    //Sort matches
+    .sort({
+      score: {
+        $meta: 'textScore'
+      }
+    })
+    //limit to 5 stores
+    .limit(5);
+  res.json(stores);
+};
+
+exports.mapStores = async (req, res) => {
+  const coordinates = [req.query.lng, req.query.lat].map(parseFloat);
+  const distance = Number(req.query.distance) * 1609.34 || 40233.6 //User distance * 1 mile or 25 mile default
+  const limit = Number(req.query.limit) || 10;
+  const q = {
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates
+        },
+        $maxDistance: distance
+      }
+    }
+  };
+
+  const stores = await Store.find(q).select('slug name description location').limit(limit);
+  res.json(stores);
+};
+
+exports.mapPage = async (req, res) => {
+  res.render('map', {
+    title: 'Map'
+  });
+}
