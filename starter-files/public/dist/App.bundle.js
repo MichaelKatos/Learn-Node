@@ -3899,12 +3899,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _modules_bling__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/bling */ "./public/javascripts/modules/bling.js");
 /* harmony import */ var _modules_autocomplete__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/autocomplete */ "./public/javascripts/modules/autocomplete.js");
 /* harmony import */ var _modules_typeAhead__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/typeAhead */ "./public/javascripts/modules/typeAhead.js");
+/* harmony import */ var _modules_map__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/map */ "./public/javascripts/modules/map.js");
+/* harmony import */ var _modules_heart__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/heart */ "./public/javascripts/modules/heart.js");
+
+
 
 
 
 
 Object(_modules_autocomplete__WEBPACK_IMPORTED_MODULE_2__["default"])(Object(_modules_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('#address'), Object(_modules_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('#lat'), Object(_modules_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('#lng'));
 Object(_modules_typeAhead__WEBPACK_IMPORTED_MODULE_3__["default"])(Object(_modules_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('.search'));
+Object(_modules_map__WEBPACK_IMPORTED_MODULE_4__["default"])(Object(_modules_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('#map'));
+var heartForms = Object(_modules_bling__WEBPACK_IMPORTED_MODULE_1__["$$"])('form.heart');
+heartForms.on('submit', _modules_heart__WEBPACK_IMPORTED_MODULE_5__["default"]);
 
 /***/ }),
 
@@ -3964,6 +3971,154 @@ NodeList.prototype.on = NodeList.prototype.addEventListener = function (name, fn
 };
 
 
+
+/***/ }),
+
+/***/ "./public/javascripts/modules/heart.js":
+/*!*********************************************!*\
+  !*** ./public/javascripts/modules/heart.js ***!
+  \*********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _bling__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bling */ "./public/javascripts/modules/bling.js");
+
+
+
+function ajaxHeart(e) {
+  var _this = this;
+
+  e.preventDefault();
+  console.log('Heart Ittttt!!!!!!!!!!');
+  console.log(this);
+  axios__WEBPACK_IMPORTED_MODULE_0___default.a.post(this.action).then(function (res) {
+    var isHearted = _this.heart.classList.toggle('heart__button--hearted');
+
+    Object(_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('.heart-count').textContent = res.data.hearts.length;
+
+    if (isHearted) {
+      _this.heart.classList.add('heart__button--float');
+
+      setTimeout(function () {
+        return _this.heart.classList.remove('heart__button--float');
+      }, 2500);
+    }
+  }).catch(console.error);
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (ajaxHeart);
+
+/***/ }),
+
+/***/ "./public/javascripts/modules/map.js":
+/*!*******************************************!*\
+  !*** ./public/javascripts/modules/map.js ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _bling__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bling */ "./public/javascripts/modules/bling.js");
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+
+ // const mapOptions = {
+//   center: {
+//     lat,
+//     lng
+//   },
+//   zoom: 2
+// };
+
+function error(err) {
+  console.warn("ERROR(".concat(err.code, "): ").concat(err.message));
+  h.flash('We are unable to access your location.  You must enable location access to find users near you!');
+}
+
+;
+
+function loadPlaces(map, lat, lng) {
+  axios__WEBPACK_IMPORTED_MODULE_0___default.a.get("/api/v1/stores/near?lat=".concat(lat, "&lng=").concat(lng)).then(function (res) {
+    var places = res.data;
+
+    if (!places.length) {
+      alert('no places found!');
+      return;
+    } //Create a bounds
+
+
+    var bounds = new google.maps.LatLngBounds();
+    var infoWindow = new google.maps.InfoWindow();
+    var markers = places.map(function (place) {
+      var _place$location$coord = _slicedToArray(place.location.coordinates, 2),
+          placeLng = _place$location$coord[0],
+          placeLat = _place$location$coord[1];
+
+      var position = {
+        lat: placeLat,
+        lng: placeLng
+      };
+      bounds.extend(position);
+      var marker = new google.maps.Marker({
+        map: map,
+        position: position
+      });
+      marker.place = place;
+      return marker;
+    }); //when someone clicks on a marker, show details of that place
+
+    markers.forEach(function (marker) {
+      return marker.addListener('click', function () {
+        var html = "\n          <div class=\"popup\">\n            <a href=\"/store/".concat(this.place.slug, "\">\n              <img src=\"/uploads/").concat(this.place.photo || 'store.png', "\" alt=\"").concat(this.place.name, "\" />\n              <p>\n                ").concat(this.place.name, " - ").concat(this.place.location.address, "\n              </p>\n            </a>\n          </div>\n        ");
+        infoWindow.setContent(html);
+        infoWindow.open(map, this);
+      });
+    }); //zoom to fit bounds perfectly
+
+    map.setCenter(bounds.getCenter());
+    map.fitBounds(bounds);
+  }).catch(function (err) {
+    console.warn(err);
+  });
+}
+
+function makeMap(mapDiv) {
+  if (!mapDiv) return;
+  navigator.geolocation.getCurrentPosition(function (data) {
+    var lat = data.coords.latitude;
+    var lng = data.coords.longitude;
+    var map = new google.maps.Map(mapDiv, {
+      center: {
+        lat: lat,
+        lng: lng
+      },
+      zoom: 10
+    });
+    loadPlaces(map, lat, lng);
+    var input = Object(_bling__WEBPACK_IMPORTED_MODULE_1__["$"])('[name="geolocate"]');
+    var autocomplete = new google.maps.places.Autocomplete(input); // console.log(`lat is ${lat},long is ${lng}`);
+
+    autocomplete.addListener('place_changed', function () {
+      var place = autocomplete.getPlace();
+      loadPlaces(map, place.geometry.location.lat(), place.geometry.location.lng());
+    });
+  }, error); //
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (makeMap);
 
 /***/ }),
 

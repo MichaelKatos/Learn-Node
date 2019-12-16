@@ -24,7 +24,11 @@ const userSchema = new mongoose.Schema({
   level: {
     type: Number,
     default: 1
-  }
+  },
+  hearts: [{
+    type: mongoose.Schema.ObjectId,
+    ref: 'Store'
+  }]
 });
 
 userSchema.virtual('gravatar').get(function () {
