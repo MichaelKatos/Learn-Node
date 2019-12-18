@@ -59,11 +59,33 @@ exports.createStore = async (req, res) => {
 };
 
 exports.getStores = async (req, res) => {
+  const page = req.params.page || 1;
+  const limit = 6;
+  const skip = (page * limit) - limit;
   //Query database for all stores
-  const stores = await Store.find();
+  const storesPromise = Store
+    .find()
+    .skip(skip)
+    .limit(limit)
+    .sort({
+      created: 'desc'
+    });
+
+  const countPromise = Store.countDocuments();
+
+  const [stores, count] = await Promise.all([storesPromise, countPromise]);
+  const pages = Math.ceil(count / limit);
+  if (!stores.length && skip) {
+    req.flash('info', `Page ${page} does not exist.  You have been redirected to page ${pages}`);
+    res.redirect(`/stores/page/${pages}`);
+    return;
+  }
   res.render('stores', {
     title: 'Stores',
-    stores
+    stores,
+    pages,
+    page,
+    count
   });
 };
 
